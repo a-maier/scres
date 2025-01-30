@@ -1,0 +1,19 @@
+[package]
+name = "scres"
+description = "A single-step cell resampling library with C bindings"
+authors = ["Andreas Maier <amaier@ifae.es>"]
+edition = "2021"
+license = "GPL-3.0-or-later"
+readme = "Readme.md"
+keywords = ["physics"]
+categories = ["science"]
+repository = "https://github.com/a-maier/scres"
+version = "0.0.1"
+
+[dependencies]
+cres = { version = "0.7.1", features = ["capi"] }
+noisy_float = "0.2.0"
+particle_id = "0.5.0"
+
+[build-dependencies]
+cbindgen = "0.28.0"
