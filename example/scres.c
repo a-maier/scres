@@ -72,6 +72,7 @@ int main() {
   EventView event = (EventView) {
     .id = 0, /* this field is ignored */
     .n_type_sets = 1u, /* number of different particle types */
+    .type_sets = &jet_view,
     .n_weights = 1u, /* number of weights */
     .weights = &events[0].weight /* event weights */,
   };
