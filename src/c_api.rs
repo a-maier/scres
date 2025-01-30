@@ -7,10 +7,10 @@ use cres::{
     },
     distance::EuclWithScaledPt,
     event::{Event, EventBuilder},
+    n64,
     traits::Distance,
+    ParticleID,
 };
-use noisy_float::prelude::*;
-use particle_id::ParticleID;
 
 use crate::resampler::{Resampler, ResamplerBuilder};
 
@@ -73,7 +73,10 @@ pub unsafe extern "C" fn scres_reserve(scres: *mut c_void, cap: usize) {
 /// The resampler must have been previous constructed with `scres_new`.
 ///
 #[no_mangle]
-pub unsafe extern "C" fn scres_push_event(scres: *mut c_void, event: EventView) {
+pub unsafe extern "C" fn scres_push_event(
+    scres: *mut c_void,
+    event: EventView,
+) {
     let scres = scres as *mut &mut dyn CResampler;
     (*scres).push(event);
 }
@@ -87,7 +90,9 @@ pub unsafe extern "C" fn scres_push_event(scres: *mut c_void, event: EventView) 
 ///
 #[no_mangle]
 #[must_use]
-pub unsafe extern "C" fn scres_next_weights(scres: *mut c_void) -> *const c_double {
+pub unsafe extern "C" fn scres_next_weights(
+    scres: *mut c_void,
+) -> *const c_double {
     let scres = scres as *mut &mut dyn CResampler;
     match (*scres).next_weights() {
         Some(wts) => wts.as_ptr(),
@@ -104,7 +109,7 @@ pub unsafe extern "C" fn scres_next_weights(scres: *mut c_void) -> *const c_doub
 pub unsafe extern "C" fn scres_resample(
     scres: *const c_void,
     seed: usize,
-    max_cell_size: c_double
+    max_cell_size: c_double,
 ) {
     let scres = scres as *const &mut dyn CResampler;
     (*scres).resample_cell(seed, max_cell_size);
@@ -183,7 +188,7 @@ mod tests {
     #[test]
     fn c_api() {
         unsafe {
-            let opt = Opt{
+            let opt = Opt {
                 neighbour_search: Search::Tree,
                 pt_weight: 0.0,
             };
@@ -193,13 +198,23 @@ mod tests {
             let jets = TypeSet {
                 pid: 90,
                 momenta: vec![
-                    [0.86042412975E+02, 0.18299527188E+02,  0.50776693328E+02, -0.67008593105E+02],
-                    [0.80026513931E+03, -0.18299527188E+02, -0.50776693328E+02, -0.79844295220E+03],
+                    [
+                        0.86042412975E+02,
+                        0.18299527188E+02,
+                        0.50776693328E+02,
+                        -0.67008593105E+02,
+                    ],
+                    [
+                        0.80026513931E+03,
+                        -0.18299527188E+02,
+                        -0.50776693328E+02,
+                        -0.79844295220E+03,
+                    ],
                 ],
             };
             let view = jets.view();
             let weights = -1.0;
-            let event = EventView{
+            let event = EventView {
                 id: 0,
                 weights: &weights as _,
                 type_sets: &view as _,
@@ -211,13 +226,23 @@ mod tests {
             let jets = TypeSet {
                 pid: 90,
                 momenta: vec![
-                    [0.49452408437E+02, 0.20789583719E+02, -0.23718791628E+02,  0.38088749425E+02],
-                    [0.10452662667E+03, -0.20789583719E+02, 0.23718791628E+02, 0.99654542370E+02]
+                    [
+                        0.49452408437E+02,
+                        0.20789583719E+02,
+                        -0.23718791628E+02,
+                        0.38088749425E+02,
+                    ],
+                    [
+                        0.10452662667E+03,
+                        -0.20789583719E+02,
+                        0.23718791628E+02,
+                        0.99654542370E+02,
+                    ],
                 ],
             };
             let view = jets.view();
             let weights = 1.0;
-            let event = EventView{
+            let event = EventView {
                 id: 0,
                 weights: &weights as _,
                 type_sets: &view as _,
@@ -234,6 +259,5 @@ mod tests {
 
             scres_free(resampler);
         }
-
     }
 }

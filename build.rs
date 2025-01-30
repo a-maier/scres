@@ -16,7 +16,7 @@ fn write_c_header() {
 
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-    let mut config = cbindgen::Config{
+    let mut config = cbindgen::Config {
         cpp_compat: true,
         ..Default::default()
     };

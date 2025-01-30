@@ -5,8 +5,8 @@ use cres::{
     event::Event,
     neighbour_search::{NaiveNeighbourSearch, TreeSearch},
     traits::{Distance, NeighbourSearchAlgo},
+    N64,
 };
-use noisy_float::prelude::*;
 
 /// A single-cell resampler
 #[derive(Debug)]
