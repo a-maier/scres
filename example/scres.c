@@ -8,7 +8,7 @@
  *
  * Now compile the example, for example with
  * ```
- * cc -o scres examples/cres.c -lscres -lcres -lm
+ * cc -o scres examples/scres.c -lscres -lm
  * ```
  *
  * Finally, run with
