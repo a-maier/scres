@@ -37,11 +37,12 @@ pub extern "C" fn scres_new(opt: Opt) -> *mut c_void {
         pt_weight,
     } = opt;
     let dist = EuclWithScaledPt::new(n64(pt_weight));
-    let mut resampler = ResamplerBuilder::default()
+    let resampler = ResamplerBuilder::default()
         .distance(dist.clone())
         .neighbour_search(neighbour_search)
         .build();
-    Box::into_raw(Box::new(&mut resampler)) as _
+    let resampler: &mut dyn CResampler = Box::leak(Box::new(resampler));
+    Box::into_raw(Box::new(resampler)) as _
 }
 
 /// Delete a resampler
