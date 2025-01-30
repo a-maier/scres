@@ -38,7 +38,7 @@ pub extern "C" fn scres_new(opt: Opt) -> *mut c_void {
     } = opt;
     let dist = EuclWithScaledPt::new(n64(pt_weight));
     let resampler = ResamplerBuilder::default()
-        .distance(dist.clone())
+        .distance(dist)
         .neighbour_search(neighbour_search)
         .build();
     let resampler: &mut dyn CResampler = Box::leak(Box::new(resampler));
@@ -46,6 +46,10 @@ pub extern "C" fn scres_new(opt: Opt) -> *mut c_void {
 }
 
 /// Delete a resampler
+///
+/// # Safety
+/// The resampler must have been previous constructed with `scres_new`.
+///
 #[no_mangle]
 pub unsafe extern "C" fn scres_free(scres: *mut c_void) {
     assert!(!scres.is_null());
@@ -53,6 +57,10 @@ pub unsafe extern "C" fn scres_free(scres: *mut c_void) {
 }
 
 /// Reserve space for events (optional)
+///
+/// # Safety
+/// The resampler must have been previous constructed with `scres_new`.
+///
 #[no_mangle]
 pub unsafe extern "C" fn scres_reserve(scres: *mut c_void, cap: usize) {
     let scres = scres as *mut &mut dyn CResampler;
@@ -60,6 +68,10 @@ pub unsafe extern "C" fn scres_reserve(scres: *mut c_void, cap: usize) {
 }
 
 /// Add an event
+///
+/// # Safety
+/// The resampler must have been previous constructed with `scres_new`.
+///
 #[no_mangle]
 pub unsafe extern "C" fn scres_push_event(scres: *mut c_void, event: EventView) {
     let scres = scres as *mut &mut dyn CResampler;
@@ -69,6 +81,10 @@ pub unsafe extern "C" fn scres_push_event(scres: *mut c_void, event: EventView) 
 /// Remove the *last* event and retrieve its weights
 ///
 /// Returns a null pointer if there are no events left.
+///
+/// # Safety
+/// The resampler must have been previous constructed with `scres_new`.
+///
 #[no_mangle]
 #[must_use]
 pub unsafe extern "C" fn scres_next_weights(scres: *mut c_void) -> *const c_double {
@@ -80,6 +96,10 @@ pub unsafe extern "C" fn scres_next_weights(scres: *mut c_void) -> *const c_doub
 }
 
 /// Construct a cell with the `n`th event as seed and resample
+///
+/// # Safety
+/// The resampler must have been previous constructed with `scres_new`.
+///
 #[no_mangle]
 pub unsafe extern "C" fn scres_resample(
     scres: *const c_void,
