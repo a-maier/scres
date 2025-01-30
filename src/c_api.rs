@@ -81,7 +81,6 @@ pub unsafe extern "C" fn scres_next_weights(scres: *mut c_void) -> *const c_doub
 
 /// Construct a cell with the `n`th event as seed and resample
 #[no_mangle]
-#[must_use]
 pub unsafe extern "C" fn scres_resample(
     scres: *const c_void,
     seed: usize,
