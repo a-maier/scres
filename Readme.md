@@ -14,7 +14,7 @@ Add this to your Cargo.toml:
 
 ```toml
 [dependencies]
-scres = "0.0.1"
+scres = "0.0.2"
 ```
 
 ### C
