@@ -151,3 +151,69 @@ impl<'a> From<ToEvent<'a>> for Event {
         event.build()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use core::f64;
+
+    use cres::c_api::event::TypeSet;
+
+    use super::*;
+
+    #[test]
+    fn c_api() {
+        unsafe {
+            let opt = Opt{
+                neighbour_search: Search::Tree,
+                pt_weight: 0.0,
+            };
+            let resampler = scres_new(opt);
+            scres_reserve(resampler, 2);
+
+            let jets = TypeSet {
+                pid: 90,
+                momenta: vec![
+                    [0.86042412975E+02, 0.18299527188E+02,  0.50776693328E+02, -0.67008593105E+02],
+                    [0.80026513931E+03, -0.18299527188E+02, -0.50776693328E+02, -0.79844295220E+03],
+                ],
+            };
+            let view = jets.view();
+            let weights = -1.0;
+            let event = EventView{
+                id: 0,
+                weights: &weights as _,
+                type_sets: &view as _,
+                n_weights: 1,
+                n_type_sets: 1,
+            };
+            scres_push_event(resampler, event);
+
+            let jets = TypeSet {
+                pid: 90,
+                momenta: vec![
+                    [0.49452408437E+02, 0.20789583719E+02, -0.23718791628E+02,  0.38088749425E+02],
+                    [0.10452662667E+03, -0.20789583719E+02, 0.23718791628E+02, 0.99654542370E+02]
+                ],
+            };
+            let view = jets.view();
+            let weights = 1.0;
+            let event = EventView{
+                id: 0,
+                weights: &weights as _,
+                type_sets: &view as _,
+                n_weights: 1,
+                n_type_sets: 1,
+            };
+            scres_push_event(resampler, event);
+
+            scres_resample(resampler, 0, f64::MAX);
+
+            assert_eq!(*scres_next_weights(resampler), 0.0);
+            assert_eq!(*scres_next_weights(resampler), 0.0);
+            assert!(scres_next_weights(resampler).is_null());
+
+            scres_free(resampler);
+        }
+
+    }
+}
