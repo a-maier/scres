@@ -81,25 +81,6 @@ pub unsafe extern "C" fn scres_push_event(
     (*scres).push(event);
 }
 
-/// Remove the *last* event and retrieve its weights
-///
-/// Returns a null pointer if there are no events left.
-///
-/// # Safety
-/// The resampler must have been previous constructed with `scres_new`.
-///
-#[no_mangle]
-#[must_use]
-pub unsafe extern "C" fn scres_next_weights(
-    scres: *mut c_void,
-) -> *const c_double {
-    let scres = scres as *mut &mut dyn CResampler;
-    match (*scres).next_weights() {
-        Some(wts) => wts.as_ptr(),
-        None => std::ptr::null(),
-    }
-}
-
 /// Construct a cell with the `n`th event as seed and resample
 ///
 /// # Safety
@@ -115,6 +96,34 @@ pub unsafe extern "C" fn scres_resample(
     (*scres).resample_cell(seed, max_cell_size);
 }
 
+/// Returns the weights of the chosen event
+///
+/// # Safety
+/// The resampler must have been previous constructed with `scres_new`.
+///
+#[no_mangle]
+#[must_use]
+pub unsafe extern "C" fn scres_get_weights(
+    scres: *mut c_void,
+    pos: usize,
+) -> *const c_double {
+    let scres = scres as *mut &mut dyn CResampler;
+    (*scres).get_weights(pos).as_ptr()
+}
+
+/// Delete all pushed events
+///
+/// # Safety
+/// The resampler must have been previous constructed with `scres_new`.
+///
+#[no_mangle]
+pub unsafe extern "C" fn scres_clear(
+    scres: *mut c_void,
+) {
+    let scres = scres as *mut &mut dyn CResampler;
+    (*scres).clear()
+}
+
 pub trait CResampler {
     fn resample_cell(&self, seed: usize, max_cell_size: f64);
 
@@ -122,7 +131,9 @@ pub trait CResampler {
 
     fn push(&mut self, event: EventView);
 
-    fn next_weights(&mut self) -> Option<&[f64]>;
+    fn get_weights(&mut self, pos: usize) -> &[f64];
+
+    fn clear(&mut self);
 }
 
 impl<D: Distance + Send + Sync> CResampler for Resampler<D> {
@@ -138,9 +149,13 @@ impl<D: Distance + Send + Sync> CResampler for Resampler<D> {
         self.push(ToEvent(event).into());
     }
 
-    fn next_weights(&mut self) -> Option<&[f64]> {
-        self.next_weights()
-            .map(|w| unsafe { std::mem::transmute(w) })
+    fn get_weights(&mut self, pos: usize) -> &[f64] {
+        // Safety: N64 and f64 have the same memory layout and alignment
+        unsafe { std::mem::transmute(self.get_weights(pos)) }
+    }
+
+    fn clear(&mut self) {
+        self.clear();
     }
 }
 
@@ -253,9 +268,10 @@ mod tests {
 
             scres_resample(resampler, 0, f64::MAX);
 
-            assert_eq!(*scres_next_weights(resampler), 0.0);
-            assert_eq!(*scres_next_weights(resampler), 0.0);
-            assert!(scres_next_weights(resampler).is_null());
+            assert_eq!(*scres_get_weights(resampler, 0), 0.0);
+            assert_eq!(*scres_get_weights(resampler, 1), 0.0);
+
+            scres_clear(resampler);
 
             scres_free(resampler);
         }

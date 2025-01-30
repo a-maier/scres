@@ -87,13 +87,13 @@ int main() {
   scres_resample(resampler, 0, DBL_MAX);
 
   /* delete events in *reverse* order, retrieving their weights */
-  double weight = *scres_next_weights(resampler);
+  double weight = *scres_get_weights(resampler, 0);
   assert(weight == 0.0);
-  weight = *scres_next_weights(resampler);
+  weight = *scres_get_weights(resampler, 1);
   assert(weight == 0.0);
 
-  /* no more events left */
-  assert(scres_next_weights(resampler) == NULL);
+  /* optionally prepare for the next round by clearing out the events */
+  scres_clear(resampler);
 
   /* clean up */
   scres_free(resampler);

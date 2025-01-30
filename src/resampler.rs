@@ -56,12 +56,20 @@ impl<D> Resampler<D> {
         self.events.push(event)
     }
 
-    /// Remove the *last* event and retrieve its weights
-    pub fn next_weights(&mut self) -> Option<&[N64]> {
-        let next_ev = self.events.pop()?;
-        self.last_retrieved_weights =
-            next_ev.weights.into_inner().iter().copied().collect();
-        Some(&self.last_retrieved_weights)
+    /// Retrieve the weights of the given event
+    pub fn get_weights(&mut self, pos: usize) -> &[N64] {
+        self.last_retrieved_weights = self.events[pos]
+            .weights
+            .read()
+            .iter()
+            .copied()
+            .collect();
+        &self.last_retrieved_weights
+    }
+
+    /// Remove all events
+    pub fn clear(&mut self) {
+        self.events.clear();
     }
 }
 
