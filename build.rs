@@ -32,6 +32,7 @@ fn write_c_header() {
         .with_crate(crate_dir)
         .with_language(Language::C)
         .with_include_guard("SCRES_H")
+        .rename_item("Opt", "ScresOpt")
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(out);
