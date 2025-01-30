@@ -81,6 +81,7 @@ int main() {
   /* add second event */
   jet_view.momenta = events[1].jet_momenta;
   event.weights = &events[1].weight;
+  scres_push_event(resampler, event);
 
   /* resample with first event as seed and unlimited cell size */
   scres_resample(resampler, 0, DBL_MAX);
