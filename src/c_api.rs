@@ -146,6 +146,7 @@ impl<D: Distance + Send + Sync> CResampler for Resampler<D> {
     }
 
     fn push(&mut self, event: EventView) {
+        // TODO: remove `ToEvent` once cres 0.9 is available
         self.push(ToEvent(event).into());
     }
 
