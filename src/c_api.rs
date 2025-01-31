@@ -22,8 +22,7 @@ pub struct Opt {
     neighbour_search: Search,
     /// Extra contribution to distance proportional to difference in pt
     ///
-    /// This parameter is ignored when using a custom distance. Otherwise,
-    /// it corresponds to the τ parameter of
+    /// This parameter corresponds to the τ parameter of
     /// [arXiv:2109.07851](https://arxiv.org/abs/2109.07851)
     pt_weight: c_double,
 }
