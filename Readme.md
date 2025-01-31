@@ -29,3 +29,18 @@ The documentation consists of comments in `scres.h`. For an example,
 see the
 [examples](https://github.com/a-maier/cres/tree/master/examples)
 subdirectory.
+
+### C (manual installation)
+
+Instead of downloading the precompiled libraries, you can build them
+by running
+
+```
+git clone https://github.com/a-maier/scres
+cd scres
+cargo build --release
+```
+
+You can find the compiled libraries in `target/release` and the
+headers `cres.h` and `scres.h` in subdirectories of
+`target/release/build`.
