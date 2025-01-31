@@ -170,8 +170,11 @@ impl<'a> From<ToEvent<'a>> for Event {
             n_weights,
             n_type_sets,
         } = view.0;
-        // TODO: reserve
-        let mut event = EventBuilder::new();
+        let n_particles =
+            (0..n_type_sets)
+            .map(|n| unsafe { (*type_sets.add(n)).n_momenta })
+            .sum();
+        let mut event = EventBuilder::with_capacity(n_particles);
         for n_weight in 0..n_weights {
             let weight = unsafe { *weights.add(n_weight) };
             event.add_weight(n64(weight));
