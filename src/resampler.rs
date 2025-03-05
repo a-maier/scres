@@ -58,13 +58,25 @@ impl<D> Resampler<D> {
 
     /// Retrieve the weights of the given event
     pub fn get_weights(&mut self, pos: usize) -> &[N64] {
-        self.last_retrieved_weights = self.events[pos]
-            .weights
-            .read()
-            .iter()
-            .copied()
-            .collect();
+        self.last_retrieved_weights =
+            self.events[pos].weights.read().iter().copied().collect();
         &self.last_retrieved_weights
+    }
+
+    /// Retrieve the number of weights of the given event
+    pub fn get_num_weights(&self, pos: usize) -> usize {
+        self.events[pos].n_weights()
+    }
+
+    /// Retrieve the weights of the given event
+    pub fn set_weights(&self, pos: usize, weights: &[N64]) {
+        // TODO: this is awkward
+        // the natural way would be `copy_from_slice`,
+        // but the `Weights` struct does not expose it
+        let mut target_weights = self.events[pos].weights.write();
+        for (lhs, rhs) in target_weights.iter_mut().zip(weights) {
+            *lhs = *rhs
+        }
     }
 
     /// Remove all events

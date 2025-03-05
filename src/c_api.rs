@@ -1,4 +1,7 @@
-use std::os::raw::{c_double, c_void};
+use std::{
+    os::raw::{c_double, c_void},
+    ptr::slice_from_raw_parts,
+};
 
 use cres::{
     c_api::{
@@ -7,7 +10,7 @@ use cres::{
     },
     distance::EuclWithScaledPt,
     event::{Event, EventBuilder},
-    n64,
+    N64, n64,
     traits::Distance,
     ParticleID,
 };
@@ -110,15 +113,46 @@ pub unsafe extern "C" fn scres_get_weights(
     (*scres).get_weights(pos).as_ptr()
 }
 
+/// Get the number of weights of the chosen event
+///
+/// # Safety
+/// - The resampler must have been previous constructed with `scres_new`.
+#[no_mangle]
+#[must_use]
+pub unsafe extern "C" fn scres_get_num_weights(
+    scres: *const c_void,
+    pos: usize,
+) -> usize {
+    let scres = scres as *const &dyn CResampler;
+    (*scres).get_num_weights(pos)
+}
+
+/// Sets the weights of the chosen event
+///
+/// # Safety
+/// - The resampler must have been previous constructed with `scres_new`.
+/// - The number of elements in the `weights` array has to be at least
+///   as large as the existing number of weights in the event. Extra
+///   elements will be ignored. `weights` must not be null.
+#[no_mangle]
+pub unsafe extern "C" fn scres_set_weights(
+    scres: *const c_void,
+    pos: usize,
+    weights: *const c_double,
+) {
+    let num_weights = scres_get_num_weights(scres, pos);
+    let scres = scres as *const &dyn CResampler;
+    let weights = slice_from_raw_parts(weights, num_weights);
+    (*scres).set_weights(pos, weights.as_ref().unwrap())
+}
+
 /// Delete all pushed events
 ///
 /// # Safety
 /// The resampler must have been previous constructed with `scres_new`.
 ///
 #[no_mangle]
-pub unsafe extern "C" fn scres_clear(
-    scres: *mut c_void,
-) {
+pub unsafe extern "C" fn scres_clear(scres: *mut c_void) {
     let scres = scres as *mut &mut dyn CResampler;
     (*scres).clear()
 }
@@ -131,6 +165,10 @@ pub trait CResampler {
     fn push(&mut self, event: EventView);
 
     fn get_weights(&mut self, pos: usize) -> &[f64];
+
+    fn get_num_weights(&self, pos: usize) -> usize;
+
+    fn set_weights(&self, pos: usize, weights: &[f64]);
 
     fn clear(&mut self);
 }
@@ -149,9 +187,19 @@ impl<D: Distance + Send + Sync> CResampler for Resampler<D> {
         self.push(ToEvent(event).into());
     }
 
+    fn get_num_weights(&self, pos: usize) -> usize {
+        Resampler::get_num_weights(self, pos)
+    }
+
     fn get_weights(&mut self, pos: usize) -> &[f64] {
         // Safety: N64 and f64 have the same memory layout and alignment
         unsafe { std::mem::transmute(self.get_weights(pos)) }
+    }
+
+    fn set_weights(&self, pos: usize, weights: &[f64]) {
+        // Safety: N64 and f64 have the same memory layout and alignment
+        let weights: &[N64] = unsafe { std::mem::transmute(weights) };
+        self.set_weights(pos, weights)
     }
 
     fn clear(&mut self) {
@@ -170,8 +218,7 @@ impl<'a> From<ToEvent<'a>> for Event {
             n_weights,
             n_type_sets,
         } = view.0;
-        let n_particles =
-            (0..n_type_sets)
+        let n_particles = (0..n_type_sets)
             .map(|n| unsafe { (*type_sets.add(n)).n_momenta })
             .sum();
         let mut event = EventBuilder::with_capacity(n_particles);
