@@ -8,7 +8,7 @@
  *
  * Now compile the example, for example with
  * ```
- * cc -o scres examples/scres.c -lscres -lm
+ * cc -o scres example/scres.c -lscres -lm
  * ```
  *
  * Finally, run with
@@ -86,11 +86,17 @@ int main() {
   /* resample with first event as seed and unlimited cell size */
   scres_resample(resampler, 0, DBL_MAX);
 
-  /* delete events in *reverse* order, retrieving their weights */
+  /* get event weights */
+  assert(scres_get_num_weights(resampler, 0) == 1);
   double weight = *scres_get_weights(resampler, 0);
   assert(weight == 0.0);
   weight = *scres_get_weights(resampler, 1);
   assert(weight == 0.0);
+
+  /* manually set event weights */
+  weight = 1.0;
+  scres_set_weights(resampler, 0, &weight);
+  assert(*scres_get_weights(resampler, 0) == weight);
 
   /* optionally prepare for the next round by clearing out the events */
   scres_clear(resampler);
